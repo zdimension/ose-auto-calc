@@ -1,0 +1,10 @@
+[project]
+name = "ose-auto-calc"
+version = "0.1.0"
+description = "Automatically calculates total class hours from ADE-exported ICS files"
+requires-python = ">=3.12"
+dependencies = [
+    "icalendar>=6.3.2",
+    "python-dotenv>=1.2.1",
+    "requests>=2.32.5",
+]
