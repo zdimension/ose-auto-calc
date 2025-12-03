@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from dotenv import load_dotenv
 import requests
 from icalendar import Calendar
+from tabulate import tabulate
 
 
 def load_ical_url():
@@ -100,16 +101,10 @@ def calculate_duration_hours(event):
         return 24
 
 
-def format_number(value, width):
-    """Format number without trailing zeros, with decimal point alignment"""
+def format_number(value):
+    """Format number without trailing zeros"""
     # Format with up to 2 decimals, remove trailing zeros
-    formatted = f"{value:.2f}".rstrip('0').rstrip('.')
-    # If no decimal point, add spaces to align with numbers that have decimals
-    if '.' not in formatted:
-        formatted = formatted + '   '  # Add 3 spaces (for ".XX")
-    elif len(formatted.split('.')[1]) == 1:
-        formatted = formatted + ' '  # Add 1 space (for one decimal digit)
-    return f"{formatted:>{width}}"
+    return f"{value:.2f}".rstrip('0').rstrip('.')
 
 
 def main():
@@ -212,26 +207,21 @@ def main():
         print()
     
     # Calculate and display results
-    print("=" * 120)
     print("HOURS SUMMARY BY CODE")
-    print("=" * 120)
     print()
     
     # HETD conversion rates
     HETD_RATES = {'TP': 2/3, 'TD': 1, 'CM': 1.5}
     
-    # Print table header
-    print(f"{'Code & Name':<50} {'CM':>8} {'TD':>8} {'TP':>8} {'Total hours':>14} {'Total HETD':>14}")
-    print("-" * 120)
-    
-    # Track grand totals
+    # Prepare table data
+    table_data = []
     grand_total_cm = 0
     grand_total_td = 0
     grand_total_tp = 0
     grand_total_hours = 0
     grand_total_hetd = 0
     
-    # Print each code as a row
+    # Build table rows
     for code in sorted(hours_by_code.keys()):
         display_name = code_names.get(code, "Unknown")
         code_display = f"{code} - {display_name}"
@@ -252,13 +242,33 @@ def main():
         grand_total_hours += total_hours
         grand_total_hetd += total_hetd
         
-        # Print row
-        print(f"{code_display:<50} {format_number(cm_hours, 8)} {format_number(td_hours, 8)} {format_number(tp_hours, 8)} {format_number(total_hours, 14)} {format_number(total_hetd, 14)}")
+        # Add row to table
+        table_data.append([
+            code_display,
+            format_number(cm_hours),
+            format_number(td_hours),
+            format_number(tp_hours),
+            format_number(total_hours),
+            format_number(total_hetd)
+        ])
     
-    # Print total row
-    print("=" * 120)
-    print(f"{'TOTAL':<50} {format_number(grand_total_cm, 8)} {format_number(grand_total_td, 8)} {format_number(grand_total_tp, 8)} {format_number(grand_total_hours, 14)} {format_number(grand_total_hetd, 14)}")
-    print("=" * 120)
+    # Add separator line before total
+    from tabulate import SEPARATING_LINE
+    table_data.append(SEPARATING_LINE)
+    
+    # Add total row
+    table_data.append([
+        "TOTAL",
+        format_number(grand_total_cm),
+        format_number(grand_total_td),
+        format_number(grand_total_tp),
+        format_number(grand_total_hours),
+        format_number(grand_total_hetd)
+    ])
+    
+    # Print table using tabulate
+    headers = ["Code & Name", "CM", "TD", "TP", "Total hours", "Total HETD"]
+    print(tabulate(table_data, headers=headers, tablefmt="simple", numalign="right"))
 
 
 if __name__ == "__main__":
