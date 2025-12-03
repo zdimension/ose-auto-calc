@@ -48,7 +48,10 @@ def extract_code_from_description(description):
     if len(lines) < 5:
         return None, None
     
-    fifth_line = lines[4].strip()
+    try:
+        fifth_line = next(l for l in lines[4:] if 1 <= l.count("-") <= 2).strip()
+    except StopIteration:
+        return None, None
     # Match pattern: capital letters and digits followed by " - " and the display name
     match = re.match(r'^([A-Z0-9]+)\s*-\s*(.+)$', fifth_line)
     if match:
